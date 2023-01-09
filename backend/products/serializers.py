@@ -12,6 +12,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'name', 
             'company',
             'price',
+            'description',
             'black_friday_price',
         ]
         

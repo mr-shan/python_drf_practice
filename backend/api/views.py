@@ -3,6 +3,7 @@ from django.forms.models import model_to_dict
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework import generics
 
 from products.models import Product
 from products.serializers import ProductSerializer
@@ -23,13 +24,40 @@ def index(request, *args, **kwargs):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             print(serializer.validated_data)
-            try:
-                serializer.save()
-            except Exception as e:
-                print(e)
+            # try:
+            #     serializer.save()
+            # except Exception as e:
+            #     print(e)
             return Response(serializer.validated_data)
         else:
             return Response({'details': 'Invalid Data'})
+
+
+
+# special generic views that django offers
+class ProductDetailsAPIView(generics.RetrieveAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class ProductListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Product.objects.all().order_by('company')
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        query_set = Product.objects.all()
+        comp_name = self.request.query_params.get('company')
+        if comp_name is not None:
+            query_set = query_set.filter(company__iexact=comp_name)
+        return query_set
+
+    def perform_create(self, serializer):
+        company = serializer.validated_data.get('company')
+        print(company)
+        if company.upper() == 'APPLE':
+            raise generics.ValidationError('No Apple products are allowed in store')
+        else:
+            instance = serializer.save()
 
 
 # The typical django way of writing view functions.

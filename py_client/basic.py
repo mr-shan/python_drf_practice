@@ -1,7 +1,8 @@
 import requests
 
 endpoint = "https://httpbin.org/anything"
-drf_endpoint = "http://127.0.0.1:8000/api/"
+drf_endpoint = "http://127.0.0.1:8000/api"
+drf_endpoint_details = "http://127.0.0.1:8000/api/100"
 
 # response = requests.get(drf_endpoint, data="{'key': 'value'}")
 # response = requests.post(drf_endpoint, data={'key': 'value'})
@@ -9,9 +10,15 @@ drf_endpoint = "http://127.0.0.1:8000/api/"
 post_product_data = {
     'name': 'Bold',
     'company': 'Blackberry',
-    # 'price': '799.99'
+    'price': '799.99'
 }
 
-response = requests.post(drf_endpoint, data=post_product_data)
+filter_params = {
+    'company': 'samsung'
+}
+
+# response = requests.post(drf_endpoint, data=post_product_data)
+# response = requests.get(drf_endpoint_details)
+response = requests.get(drf_endpoint, params=filter_params)
 
 print(response.json())
