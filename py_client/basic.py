@@ -1,5 +1,7 @@
 import requests
 
+from auth import get_auth_token
+
 endpoint = "https://httpbin.org/anything"
 drf_endpoint = "http://127.0.0.1:8000/api"
 drf_endpoint_details = "http://127.0.0.1:8000/api/100"
@@ -17,8 +19,12 @@ filter_params = {
     'company': 'samsung'
 }
 
-# response = requests.post(drf_endpoint, data=post_product_data)
-# response = requests.get(drf_endpoint_details)
-response = requests.get(drf_endpoint, params=filter_params)
+auth_token = get_auth_token()
 
-print(response.json())
+if auth_token:
+    headers = { "Authorization": f"Token {auth_token}"}
+    # response = requests.post(drf_endpoint, data=post_product_data)
+    # response = requests.get(drf_endpoint_details)
+    response = requests.get(drf_endpoint_details, params=filter_params, headers=headers)
+
+    print(response.json())

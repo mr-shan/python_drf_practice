@@ -46,7 +46,7 @@ class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.DjangoModelPermissions]
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [authentication.SessionAuthentication, authentication.TokenAuthentication]
 
     def list(self, request):
         query_set = Product.objects.order_by('-company')
@@ -67,6 +67,8 @@ class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all().order_by('company')
     serializer_class = ProductSerializer
+    permission_classes = [permissions.DjangoModelPermissions]
+    authentication_classes = [authentication.SessionAuthentication, authentication.TokenAuthentication]
 
     def get_queryset(self):
         query_set = Product.objects.all()
