@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
 from rest_framework import generics, viewsets
 from rest_framework.mixins import ListModelMixin
-from rest_framework import permissions
+from rest_framework import permissions, authentication
 
 from products.models import Product
 from products.serializers import ProductSerializer
@@ -45,7 +45,8 @@ class ProductDetailsAPIView(generics.RetrieveAPIView):
 class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.DjangoModelPermissions]
+    authentication_classes = [authentication.SessionAuthentication]
 
     def list(self, request):
         query_set = Product.objects.order_by('-company')
