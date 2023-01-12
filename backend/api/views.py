@@ -47,6 +47,10 @@ class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.DjangoModelPermissions]
     authentication_classes = [authentication.SessionAuthentication, authentication.TokenAuthentication]
+    
+    def get_queryset(self):
+        print(self.request.user)
+        return super().get_queryset()
 
     def list(self, request):
         query_set = Product.objects.order_by('-company')
@@ -56,10 +60,8 @@ class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
     def create(self, request):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            company_name = serializer.validated_data.get('company')
-            if company_name.lower() == 'apple':
-                return Response({'details': 'Please, no Apple products allowd'}, status=403)
             serializer.save()
+            return Response(serializer.validated_data)
         else:
             return Response({'details': 'Invalid Data'})
 
@@ -72,6 +74,7 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         query_set = Product.objects.all()
+        print(self.request.user)
         comp_name = self.request.query_params.get('company')
         if comp_name is not None:
             query_set = query_set.filter(company__iexact=comp_name)
@@ -84,7 +87,8 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
             # raise generics.ValidationError('No Apple products are allowed in store')
             return Response('Failed to save product. No Apple devices allowd', status=403)
         else:
-            instance = serializer.save()
+            serializer.save()
+            return Response(serializer.validated_data)
 
 
 # Mixin based classes
