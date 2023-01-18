@@ -1,11 +1,26 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Q
 
 User = settings.AUTH_USER_MODEL
 
-# Create your models here.
-
 current_discount = 12
+
+class ProductQuerySet(models.QuerySet):
+    def is_public(self):
+        return self.filter(public=True)
+
+    def perform_search(self, query, user=None):
+        lookup = Q(name__icontains=query) | Q(company__icontains=query) | Q(description__icontains=query)
+        return self.filter(lookup)
+    
+
+class ProductManager(models.Manager):
+    def get_queryset(self):
+        return ProductQuerySet(self.model, using=self._db)
+    
+    def perform_search(self, query_string, user=None):
+        return self.get_queryset().perform_search(query_string, user=user)
 
 
 class Product(models.Model):
@@ -14,6 +29,9 @@ class Product(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=10)
     description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    public = models.BooleanField(default=True)
+
+    objects = ProductManager()
 
     @property
     def summary(self):

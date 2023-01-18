@@ -7,5 +7,6 @@ urlpatterns = [
     path('auth/', obtain_auth_token),
     path('<int:pk>', views.ProductDetailsAPIView.as_view(), name='product-details'),
     path('', views.ProductListCreateAPIView.as_view()),
-    path('products/', views.ProductListCreateAPIViewSet.as_view({'get': 'list', 'post': 'create'}))
+    path('products/', views.ProductListCreateAPIViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('products-search/', views.ProductSearchAPIView.as_view()),
 ]

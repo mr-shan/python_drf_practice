@@ -58,6 +58,19 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
             query_set = query_set.filter(user=self.request.user)
         return query_set
 
+
+class ProductSearchAPIView(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query_string = self.request.GET.get('q')
+        if query_string:
+            return queryset.perform_search(query_string)
+        else:
+            return queryset
+
     # def perform_create(self, serializer):
     #     company = serializer.validated_data.get('company')
     #     print(company)
