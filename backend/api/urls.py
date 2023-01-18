@@ -8,6 +8,4 @@ urlpatterns = [
     path('<int:pk>', views.ProductDetailsAPIView.as_view(), name='product-details'),
     path('', views.ProductListCreateAPIView.as_view()),
     path('products/', views.ProductListCreateAPIViewSet.as_view({'get': 'list', 'post': 'create'}))
-    # path('apple-products', views.AppleProductListModelMixin.as_view())
-    # path('', views.index),
 ]

@@ -14,6 +14,7 @@ def iphone_validator(value):
 class ProductSerializer(serializers.ModelSerializer):
     black_friday_price = serializers.SerializerMethodField(read_only=True)
     name = serializers.CharField(validators=[iphone_validator])
+    user = serializers.CharField(read_only=True)
     # product_details_url = serializers.SerializerMethodField(read_only=True)
     
     # This works only with model serializer.
@@ -28,17 +29,20 @@ class ProductSerializer(serializers.ModelSerializer):
             'price',
             'description',
             'black_friday_price',
+            'user'
         ]
         
     def validate_company(self, value):
         if value.lower() in chinese_company_list:
             raise serializers.ValidationError(detail='No CHINESE company allowed here.')
-        return True
+        return value
         
     
     def create(self, validated_data):
-        print("New product created successfully, calling from inside the serializer 'create' method")
-        print(validated_data)
+        request = self.context.get('request')
+        if request:
+            validated_data['user'] = request.user
+            
         return super().create(validated_data)
         
     def get_black_friday_price(self, instance):

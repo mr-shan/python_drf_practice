@@ -6,34 +6,12 @@ from rest_framework.decorators import api_view, action
 from rest_framework import generics, viewsets
 from rest_framework.mixins import ListModelMixin
 from rest_framework import permissions, authentication
+from django_filters.rest_framework import DjangoFilterBackend
 
 from products.models import Product
 from products.serializers import ProductSerializer
-
+from .authentication import TokenAuthentication
 # Create your views here.
-
-
-@api_view(['GET', 'POST'])
-def index(request, *args, **kwargs):
-    if request.method == 'GET':
-        instance = Product.objects.all().order_by('?').first()
-        data = {}
-
-        if instance:
-            data = ProductSerializer(instance).data
-
-        return Response(data)
-    elif request.method == 'POST':
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            print(serializer.validated_data)
-            # try:
-            #     serializer.save()
-            # except Exception as e:
-            #     print(e)
-            return Response(serializer.validated_data)
-        else:
-            return Response({'details': 'Invalid Data'})
 
 
 # special generic views that django offers
@@ -43,18 +21,18 @@ class ProductDetailsAPIView(generics.RetrieveAPIView):
 
 
 class ProductListCreateAPIViewSet(viewsets.GenericViewSet):
+    """Used as /api/products/"""
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.DjangoModelPermissions]
-    authentication_classes = [authentication.SessionAuthentication, authentication.TokenAuthentication]
-    
-    def get_queryset(self):
-        print(self.request.user)
-        return super().get_queryset()
+    authentication_classes = [authentication.SessionAuthentication, TokenAuthentication]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['company', 'name']
 
     def list(self, request):
-        query_set = Product.objects.order_by('-company')
-        serializer = ProductSerializer(query_set, many=True)
+        # query_set = Product.objects.order_by('-company')
+        # serializer = ProductSerializer(query_set, many=True)
+        serializer = ProductSerializer(self.filter_queryset(self.get_queryset()), many=True, context={"request": request})
         return Response(serializer.data)
 
     def create(self, request):
@@ -70,38 +48,38 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all().order_by('company')
     serializer_class = ProductSerializer
     permission_classes = [permissions.DjangoModelPermissions]
-    authentication_classes = [authentication.SessionAuthentication, authentication.TokenAuthentication]
+    authentication_classes = [authentication.SessionAuthentication, TokenAuthentication]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['company', 'name']
 
     def get_queryset(self):
         query_set = Product.objects.all()
-        print(self.request.user)
-        comp_name = self.request.query_params.get('company')
-        if comp_name is not None:
-            query_set = query_set.filter(company__iexact=comp_name)
+        if not self.request.user.is_superuser:
+            query_set = query_set.filter(user=self.request.user)
         return query_set
 
-    def perform_create(self, serializer):
-        company = serializer.validated_data.get('company')
-        print(company)
-        if company.upper() == 'APPLE':
-            # raise generics.ValidationError('No Apple products are allowed in store')
-            return Response('Failed to save product. No Apple devices allowd', status=403)
-        else:
-            serializer.save()
-            return Response(serializer.validated_data)
+    # def perform_create(self, serializer):
+    #     company = serializer.validated_data.get('company')
+    #     print(company)
+    #     if company.upper() == 'APPLE':
+    #         # raise generics.ValidationError('No Apple products are allowed in store')
+    #         return Response('Failed to save product. No Apple devices allowed', status=403)
+    #     else:
+    #         serializer.save()
+    #         return Response(serializer.validated_data)
 
 
 # Mixin based classes
 
-class AppleProductListModelMixin(ListModelMixin, generics.GenericAPIView):
-    serializer_class = ProductSerializer
-    queryset = Product.objects.all()
+# class AppleProductListModelMixin(ListModelMixin, generics.GenericAPIView):
+#     serializer_class = ProductSerializer
+#     queryset = Product.objects.all()
 
-    def get(self, request, *args, **kwargs):
-        company = request.query_params.get('company')
-        if company:
-            self.queryset = self.queryset.filter(company__iexact=company)
-        return super().list(request, *args, **kwargs)
+#     def get(self, request, *args, **kwargs):
+#         company = request.query_params.get('company')
+#         if company:
+#             self.queryset = self.queryset.filter(company__iexact=company)
+#         return super().list(request, *args, **kwargs)
 
 
 # The typical django way of writing view functions.
@@ -116,3 +94,29 @@ class AppleProductListModelMixin(ListModelMixin, generics.GenericAPIView):
 #         data = model_to_dict(random_product, fields=['name', 'company', 'price'])
 
 #     return JsonResponse(data)
+
+
+
+# function based views with each HTTP request types handled specifically 
+
+# @api_view(['GET', 'POST'])
+# def index(request, *args, **kwargs):
+#     if request.method == 'GET':
+#         instance = Product.objects.all().order_by('?').first()
+#         data = {}
+
+#         if instance:
+#             data = ProductSerializer(instance).data
+
+#         return Response(data)
+#     elif request.method == 'POST':
+#         serializer = ProductSerializer(data=request.data)
+#         if serializer.is_valid(raise_exception=True):
+#             print(serializer.validated_data)
+#             # try:
+#             #     serializer.save()
+#             # except Exception as e:
+#             #     print(e)
+#             return Response(serializer.validated_data)
+#         else:
+#             return Response({'details': 'Invalid Data'})
